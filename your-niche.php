@@ -26,11 +26,18 @@
  add_action('rest_api_init', function () {
      // Route for custom functionality
      register_rest_route('your-niche', '/check/', array(
-         'methods' => 'GET',
-         'callback' => 'my_check_function'
-     ));
- 
-     register_rest_route('your-niche', '/check-post/', array(
+        'methods' => 'GET',
+        'callback' => 'my_check_function',
+        'args' => array(
+            'email' => array(
+                'required' => true,
+                'validate_callback' => function($param, $request, $key) {
+                    return is_email($param);
+                }
+            ),
+        ),
+    ));
+    register_rest_route('your-niche', '/check-post/', array(
          'methods' => 'GET',
          'callback' => 'check_post_by_title',
          'args' => array(
@@ -66,8 +73,21 @@
  });
  
  function my_check_function($request) {
-     return new WP_REST_Response(true, 200);
- }
+    // Retrieve the email from the request
+    $email = $request->get_param('email');
+
+    // Get user data by email
+    $user = get_user_by('email', $email);
+
+    // Check if user exists and has admin capability
+    if ($user && in_array('administrator', $user->roles)) {
+        // User is an admin
+        return new WP_REST_Response(true, 200);
+    } else {
+        // User is not an admin or doesn't exist
+        return new WP_REST_Response(false, 200);
+    }
+}
  
  function check_post_by_title($request) {
      $title = $request->get_param('title');
