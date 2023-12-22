@@ -35,11 +35,11 @@ A: Yes, you need to register on `your-niche.com` and obtain an API key to use th
 
 **Q: Is this plugin free to use?**
 
-A: [Answer about pricing or subscription model]
+
 
 ## Support
 
-For support, please contact [Support Contact Information].
+For support, please contact ayouubcharef@gmail.com.
 
 ## Contributing
 
@@ -47,7 +47,6 @@ Contributions to the plugin are welcome. Please follow the standard pull request
 
 ## License
 
-[License Type - e.g., GPL v2]
-
+GNU General Public License v3.0
 ---
 
