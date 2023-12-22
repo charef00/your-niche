@@ -135,12 +135,11 @@
      $images=$request->get_param('image_content');
      $logo=esc_url_raw($request->get_param('logo'));
      //$content = sanitize_textarea_field($request->get_param('content'));
-     
-     
+ 
      $content="";
      $image_source = esc_url_raw($request->get_param('image_source'));
-     if (count($images) > 0) 
-     {
+     if (is_array($images) && !empty($images)) { 
+     
          for ($i = 0; $i < count($images); $i++) 
          {
              $src=esc_url_raw($images[$i]);
@@ -172,7 +171,14 @@
         // Set categories for the post
         wp_set_post_terms($post_id, $sanitized_category_ids, 'category');
     }
-    return new WP_REST_Response(array('post_id' => $post_id, 'attachment_id' => $attachment_id ?? null), 200);
+    return new WP_REST_Response(
+    array(
+        'message' => 'Post created successfully.',
+        'post_id' => $post_id,
+        'attachment_id' => $attachment_id ?? null
+    ), 
+    200
+    );
  }
  
  function download_and_attach_image($image_url,$title,$post_id,$logo) 
