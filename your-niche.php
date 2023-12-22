@@ -113,6 +113,7 @@
      $title = sanitize_text_field($request->get_param('title'));
      $tests=$request->get_param('post_content');
      $images=$request->get_param('image_content');
+     $logo=esc_url_raw($request->get_param('logo'));
      //$content = sanitize_textarea_field($request->get_param('content'));
      
      
@@ -124,7 +125,7 @@
          {
              $src=esc_url_raw($images[$i]);
              $image_source =$src;
-             $result = downloadImgWithApi($src, $title, $i);
+             $result = downloadImgWithApi($src, $title, $i,$logo);
              $content = $content . $tests[$i] . "<img src='" . $result . "' style='width:100%;max-width:500px;'>";
          }
      }
@@ -140,13 +141,21 @@
      $post_id = wp_insert_post($post_data);
      // Download and attach the image to the post
      if (!empty($image_source)) {
-         $attachment_id = download_and_attach_image($image_source,$title, $post_id);
+         $attachment_id = download_and_attach_image($image_source,$title, $post_id,$logo);
      }
- 
-     return new WP_REST_Response(array('post_id' => $post_id, 'attachment_id' => $attachment_id ?? null), 200);
+    $category_ids = $request->get_param('categories'); 
+    // Check if category_ids is an array and not empty
+    if (is_array($category_ids) && !empty($category_ids)) {
+        // Sanitize each category ID
+        $sanitized_category_ids = array_map('absint', $category_ids);
+
+        // Set categories for the post
+        wp_set_post_terms($post_id, $sanitized_category_ids, 'category');
+    }
+    return new WP_REST_Response(array('post_id' => $post_id, 'attachment_id' => $attachment_id ?? null), 200);
  }
  
- function download_and_attach_image($image_url,$title,$post_id) 
+ function download_and_attach_image($image_url,$title,$post_id,$logo) 
  {
      require_once(ABSPATH . 'wp-admin/includes/image.php');
      require_once(ABSPATH . 'wp-admin/includes/file.php');
@@ -154,18 +163,11 @@
  
      // Flask API URL
      $flask_api_url = "http://mirror.read-book.org/api";
- 
-     // Get the custom logo URL
-     $custom_logo_id = get_theme_mod('custom_logo');
-     $logo = wp_get_attachment_image_src($custom_logo_id, 'full');
- 
-     // Check if the logo exists and set the URL, else set to null
-     $logo_url = $logo ? $logo[0] : null;
- 
+
      // Data to send to the Flask API
      $data = array(
          'url'  => $image_url,
-         'logo' => "https://your-niche.com/Image/202312161117River.png",
+         'logo' => $logo,
          'site' => site_url(),
          'name' => "img"
      );
@@ -250,12 +252,12 @@
      $txt=str_replace("'", "\'", $txt);
      return $txt;
  }
- function downloadImgWithApi($image_url, $title, $step)
+ function downloadImgWithApi($image_url, $title, $step,$logo)
  {
      
      $data = array(
          'url'  => $image_url,
-         'logo' => "https://your-niche.com/Image/202312161117River.png",
+         'logo' => $logo,
          'site' => site_url(),
          'name' => "img"
      );
